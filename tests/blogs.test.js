@@ -1,3 +1,4 @@
+const { get } = require('mongoose');
 const Page = require('./helpers/page');
 
 let page;
@@ -64,36 +65,34 @@ beforeEach( async () => {
  })
 
  describe('When user is not logged in', async () => {
-     test('User can not create a blog post', async () => {
-        const result =  await page.evaluate(
-             () => {
-               return fetch('/api/blogs', {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ title: 'My Contet', content: 'My Content' }) 
-                }).then(res => res.json())
-             }
-         )
+     const actions = [
+         {
+             method: 'post',
+             path: '/api/blogs',
+             data:  { title: 'My Contet', content: 'My Content' }
+         },
+         {
+             method: 'get',
+             path: '/api/blogs'
+         }
+     ]
 
-        expect(result).toEqual({ error: 'You must log in!' })
+     test('Blog related actions are prohibited', async () => {
+         const results = await page.execRequests(actions);
+
+         for(let result of results){
+             expect(result).toEqual({ error: 'You must log in!' });
+         }
      })
 
-     test('User can not get list of post', async () => {
-         const result = await page.evaluate(
-             () => {
-                return fetch('/api/blogs', {
-                    method: 'GET',
-                    credentials: 'same-origin',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                }).then(res => res.json())
-             }
-         )
+    //  test('User can not create a blog post', async () => {
+    //     const result =  await page.post('/api/blogs', { title: 'My Contet', content: 'My Content' });
 
-         expect(result).toEqual({ error: 'You must log in!' })
-     })
+    //     expect(result).toEqual({ error: 'You must log in!' })
+    //  })
+
+    //  test('User can not get list of post', async () => {
+    //      const result = await page.get('/api/blogs')
+    //      expect(result).toEqual({ error: 'You must log in!' })
+    //  })
  })
